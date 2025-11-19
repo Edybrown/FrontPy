@@ -33,8 +33,7 @@ pip install git+https://github.com/Edybrown/FrontPy.git
 The following Python code generates a semantic page structure and its associated stylesheet (`style.css`):
 
 ```python
-from frontpy import HtmlDoc, Div, Section, Header, Nav, Ul, Li 
-from frontpy import nav, intro, servicios, lista_servicios, footer
+from pyfront import HtmlDoc, Div, Section, Header, Nav, Ul, Li 
 
 doc = HtmlDoc(title="My Professional Page")
 
