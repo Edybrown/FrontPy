@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pyfrontkit"
-version = "0.9.0"  # <-- actualizamos versión
-description = "A Python tool to generate HTML and CSS with programmable syntax."
+version = "1.1.5"  
+description = "A Python tool to generate HTML and CSS with programmale syntax."
 readme = "README.md"
 
 authors = [

@@ -10,7 +10,6 @@
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY. See the COPYING file for more details.
 
-
 # pyfrontkit/tags.py
 
 from .block import Block
@@ -71,6 +70,50 @@ class A(Block):
     def __init__(self, *children, **kwargs):
         super().__init__("a", *children, **kwargs)        
 
+class Video(Block):
+    def __init__(self, *children, **kwargs):
+        super().__init__("video", *children, **kwargs)
+
+class Audio(Block):
+    def __init__(self, *children, **kwargs):
+        super().__init__("audio", *children, **kwargs)
+
+class Picture(Block):
+    def __init__(self, *children, **kwargs):
+        super().__init__("picture", *children, **kwargs)
+
+class Object(Block):
+    def __init__(self, *children, **kwargs):
+        super().__init__("object", *children, **kwargs)
+
+
+# ============================================================
+#            TRANSPARENT TEXT BLOCK
+# ============================================================
+
+class T(Block):
+    """
+    Transparent block for textual content.
+    Compatible with ctn_* kwargs and DOM.
+    Does not generate its own tag.
+    """
+
+    def __init__(self, *children, **kwargs):
+        super().__init__(tag="", *children, **kwargs)
+
+        from .content import ContentFactory
+        self.content_items = ContentFactory.create_from_kwargs(**kwargs)
+
+        # Ignore children
+        self.children = []
+
+    def _render_opening_tag(self, indent: int) -> str:
+        return ""
+
+    def _render_closing_tag(self, indent: int) -> str:
+        return ""
+
+
 # ============================================================
 #            FUNCTION ALIASES FOR FREE SYNTAX
 # ============================================================
@@ -113,3 +156,18 @@ def li(*children, **kwargs):
 
 def a(*children, **kwargs):
     return A(*children, **kwargs)
+
+def video(*children, **kwargs):
+    return Video(*children, **kwargs)
+
+def audio(*children, **kwargs):
+    return Audio(*children, **kwargs)
+
+def picture(*children, **kwargs):
+    return Picture(*children, **kwargs)
+
+def object(*children, **kwargs):
+    return Object(*children, **kwargs)
+
+def t(*children, **kwargs):
+    return T(*children, **kwargs)

@@ -1,31 +1,80 @@
 # ----------------------------------------------------------------------
 # Package Configuration
 # ----------------------------------------------------------------------
-__version__ = "0.9.0"
+__version__ = "1.1.5"
 __author__ = "Eduardo Antonio Ferrera Rodriguez"
 __license__ = "GPLv3"
 
 # ----------------------------------------------------------------------
-# Export main classes and functions
+# Expose CSS submodule
 # ----------------------------------------------------------------------
+from . import css
 
+# Expose CreateColor directly
+from .css import CreateColor
+from .css import CreateWithColor
+from .css.fonts import CreateFont
+from .css.fonts import FooterFont
+from .css.fonts import HeaderFont
+from .css.fonts import MainFont
+# ----------------------------------------------------------------------
 # Core modules
+# ----------------------------------------------------------------------
 from .html_doc import HtmlDoc
-from .css import CSSRegistry
+from .css_register import CSSRegistry
 from .block import Block
 
+# ----------------------------------------------------------------------
 # Tags
+# ----------------------------------------------------------------------
 from .tags import (
-    Div, Section, Article, Header, Footer, Nav, Main, Aside, Button, Form, Ul, Li, A,
-    div, section, article, header, footer, nav, main, aside, button, form, ul, li, a
+    Div, Section, Article, Header, Footer, Nav, Main, Aside, Button, Form, Ul, Li, A,Picture,Video,Audio,Object,T ,
+    div, section, article, header, footer, nav, main, aside,
+    button, form, ul, li, a,picture,video, audio, object, t
 )
 
+# ----------------------------------------------------------------------
 # Void elements
+# ----------------------------------------------------------------------
 from .void_element import (
-    VoidElement, Img, Input, Hr, Meta, Link, Source, Embed, Param, Track, Wbr, Area, Base, Col,
-    img, input, hr, meta, link, source, embed, param, track, wbr, area, base, col
+    VoidElement, Img, Input, Hr,  Link, Source, Embed, Param, Track,
+    Wbr, Area, Base, Col,
+    img, Input, hr,  link, source, embed, param, track,
+    wbr, area, base, col
 )
 
-# Special containers
-from .special import Video, Audio, Picture, ObjectElement
-from .special import video, audio, picture, object
+
+# ----------------------------------------------------------------------
+# Public API
+# ----------------------------------------------------------------------
+__all__ = [
+    # CSS
+    "css",
+    "CreateColor",
+    "CreateWithColor",
+    "CreateFont", 
+    "FooterFont",
+    "HeaderFont",
+    "MainFont",
+    
+    # Core
+    "HtmlDoc",
+    "CSSRegistry",
+    "Block",
+
+    # Tags
+    "Div", "Section", "Article", "Header", "Footer", "Nav", "Main", "Aside",
+    "Button", "Form", "Ul", "Li", "A","T"
+    "div", "section", "article", "header", "footer", "nav", "main", "aside",
+    "button", "form", "ul", "li", "a", "t"
+
+    # Void elements
+    "VoidElement", "Img", "Input", "Hr", "Meta", "Link", "Source",
+    "Embed", "Param", "Track", "Wbr", "Area", "Base", "Col",
+    "img", "hr",  "link", "source", "embed",
+    "param", "track", "wbr", "area", "base", "col",
+
+    # Special containers
+    "Video", "Audio", "Picture", "ObjectElement",
+    "video", "audio", "picture", "Object",
+]   

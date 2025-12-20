@@ -1,4 +1,3 @@
-
 # Copyright (C) [2025] Eduardo Antonio Ferrera Rodríguez
 #
 # This program is free software: you can redistribute it and/or modify it
@@ -6,26 +5,46 @@
 # the Free Software Foundation, either version 3 of the License, or any later version.
 #
 # This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; see the COPYING file for more details.
+# but WITHOUT ANY WARRANTY. See the COPYING file for more details.
 
+# pyfrontkit/content.py
 
 # pyfrontkit/content.py
 
 class ContentItem:
     """
-    Represents a simple content element:
-    <tag>text</tag>
-    
-    Supports Python newline (\n) conversion into <br /> automatically.
+    Represents a content element:
+    - If tag is 'none', it renders raw text.
+    - Otherwise, renders <tag>text</tag>.
     """
 
-    def __init__(self, tag: str, text: str):
+    def __init__(self, tag: str, text: str, class_: str = None, style: str = None):
         self.tag = tag
-        self.lines = text.split("\n")  # split text by newline
+        self.lines = text.split("\n") if text else []
+        self.class_ = class_
+        self.style = style
 
     def render(self, indent: int = 0):
         space = " " * indent
-        html = f"{space}<{self.tag}>"
+        
+        # --- LOGIC FOR RAW TEXT (NO TAG) ---
+        if self.tag == "none":
+            html = ""
+            for i, line in enumerate(self.lines):
+                html += f"{space}{line}"
+                if i < len(self.lines) - 1:
+                    html += "<br />"
+                html += "\n"
+            return html
+
+        # --- LOGIC FOR STANDARD TAGS ---
+        attrs = ""
+        if self.class_:
+            attrs += f' class="{self.class_}"'
+        if self.style:
+            attrs += f' style="{self.style}"'
+
+        html = f"{space}<{self.tag}{attrs}>"
         for i, line in enumerate(self.lines):
             html += line
             if i < len(self.lines) - 1:
@@ -36,32 +55,33 @@ class ContentItem:
 
 class ContentFactory:
     """
-    Responsible for creating ContentItem objects from keys like 'ctn_p', 'ctn_h1', etc.
+    Creates ContentItem objects. 
+    Supports 'ctn_none' for raw text without wrapping tags.
     """
 
-    # Official list of supported tags
+    # Added 'none' to supported tags
     SUPPORTED_TAGS = {
-        "p", "span",
+        "none", "p", "span",
         "b", "strong", "i", "u", "em", "small", "mark", "code",
         "h1", "h2", "h3", "h4", "h5", "h6"
     }
 
     @classmethod
     def is_ctn_key(cls, key: str) -> bool:
-        """Checks if the key follows the 'ctn_tag' pattern."""
         return key.startswith("ctn_") and key[4:] in cls.SUPPORTED_TAGS
 
     @classmethod
     def create_from_kwargs(cls, **kwargs):
-        """
-        Processes kwargs and returns a list of ContentItem.
-        Example: ctn_p="hello" → ContentItem("p", "hello")
-        """
         items = []
-
         for key, value in kwargs.items():
             if cls.is_ctn_key(key):
-                tag = key[4:]  # remove 'ctn_'
-                items.append(ContentItem(tag, value))
+                tag = key[4:] 
 
+                if isinstance(value, tuple):
+                    text = value[0] if len(value) > 0 else ""
+                    class_ = value[1] if len(value) > 1 else None
+                    style = value[2] if len(value) > 2 else None
+                    items.append(ContentItem(tag, text, class_, style))
+                else:
+                    items.append(ContentItem(tag, value))
         return items
