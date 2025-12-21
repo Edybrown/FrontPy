@@ -1,15 +1,12 @@
+# Copyright (c) 2025 Eduardo Antonio Ferrera Rodríguez
+# SPDX-License-Identifier: MIT
+
+
 # pyfrontkit/css_register.py
-# Copyright (C) [2025] Eduardo Antonio Ferrera Rodríguez
-#
-# This program is free software: you can redistribute it and/or modify it
-# under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; see the COPYING file for more details.
 
 from pathlib import Path
 from typing import Any
+
 
 class CSSRegistry:
     """
@@ -21,11 +18,11 @@ class CSSRegistry:
     _tags = set()
     _ids = set()
     _classes = set()
-    _cascades = set() 
+    _cascades = set()
 
     _VOID_TAGS_TO_EXCLUDE = {
         "hr", "link", "source", "param", "track", "wbr", "base"
-    } 
+    }
 
     @classmethod
     def _get_child_tag(cls, child: Any) -> str | None:
