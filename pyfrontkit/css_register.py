@@ -1,19 +1,13 @@
 # Copyright (c) 2025 Eduardo Antonio Ferrera Rodríguez
 # SPDX-License-Identifier: MIT
 
-
-# pyfrontkit/css_register.py
-
-from pathlib import Path
 from typing import Any
 
 class CSSRegistry:
     """
-    Simplified CSS selector registry for PyFrontKit.
-    Manages unique registration of tags, IDs, classes, and parent > child cascade selectors.
-    The registration occurs **only in memory** for efficiency (Pure Memory).
+    Manages CSS selectors in memory. Filters out empty rules, 
+    cleans up default placeholders, and minifies output for production.
     """
-
     _tags = set()
     _ids = set()
     _classes = set()
@@ -21,76 +15,38 @@ class CSSRegistry:
 
     _VOID_TAGS_TO_EXCLUDE = {
         "hr", "link", "source", "param", "track", "wbr", "base"
-    } 
+    }
 
     @classmethod
     def _get_child_tag(cls, child: Any) -> str | None:
-        """
-        Helper to get the tag. Works for Block, ContentItem, and VoidElement.
-        """
         if hasattr(child, "tag"):
             return getattr(child, "tag")
         return None
 
     @classmethod
     def _register_cascades_by_tag(cls, block):
-        """
-        Generates and registers tag-based cascades up to 2 levels deep:
-        - tag > tag/content_tag (1st level)
-        - tag > tag > tag/content_tag (2nd level)
-        """
         parent_tag = block.tag
-
-        # Children (1st level)
         for child in getattr(block, "children", []):
             child_tag = cls._get_child_tag(child)
-            if not child_tag:
-                continue
-
-            # If parent tag is empty, don't prepend
-            selector_1 = f"{parent_tag} > {child_tag}" if parent_tag else child_tag
-            cls._cascades.add(selector_1)
-
-            # Grandchildren (2nd level)
-            if hasattr(child, "children") and hasattr(child, "content_items"):
-                for grandchild in child.children:
-                    grandchild_tag = cls._get_child_tag(grandchild)
-                    if grandchild_tag:
-                        selector_2 = f"{parent_tag} > {child_tag} > {grandchild_tag}" if parent_tag else f"{child_tag} > {grandchild_tag}"
-                        cls._cascades.add(selector_2)
-
-                for ctn_item in getattr(child, "content_items", []):
-                    grandchild_tag = cls._get_child_tag(ctn_item)
-                    if grandchild_tag:
-                        selector_2 = f"{parent_tag} > {child_tag} > {grandchild_tag}" if parent_tag else f"{child_tag} > {grandchild_tag}"
-                        cls._cascades.add(selector_2)
-
-        # ContentItems (1st Level)
-        for ctn_item in getattr(block, "content_items", []):
-            ctn_tag = cls._get_child_tag(ctn_item)
-            if ctn_tag:
-                selector_1 = f"{parent_tag} > {ctn_tag}" if parent_tag else ctn_tag
+            if child_tag:
+                selector_1 = f"{parent_tag} > {child_tag}" if parent_tag else child_tag
                 cls._cascades.add(selector_1)
+                if hasattr(child, "children"):
+                    for grandchild in child.children:
+                        grandchild_tag = cls._get_child_tag(grandchild)
+                        if grandchild_tag:
+                            selector_2 = f"{parent_tag} > {child_tag} > {grandchild_tag}" if parent_tag else f"{child_tag} > {grandchild_tag}"
+                            cls._cascades.add(selector_2)
 
     @classmethod
     def register_single_selectors(cls, element):
-        """
-        Registers only the single selectors (Tag, ID, Class) of a single element.
-        """
         attrs = getattr(element, "attrs", {})
         element_id = attrs.get("id")
-
-        # TAG REGISTRATION
         if hasattr(element, "tag") and element.tag:
-            tag = element.tag
-            if tag not in cls._VOID_TAGS_TO_EXCLUDE:
-                cls._tags.add(tag)
-
-        # ID REGISTRATION
+            if element.tag not in cls._VOID_TAGS_TO_EXCLUDE:
+                cls._tags.add(element.tag)
         if element_id:
             cls._ids.add(element_id)
-
-        # CLASS REGISTRATION
         classes = attrs.get("class")
         if classes:
             for cls_name in str(classes).split():
@@ -98,55 +54,63 @@ class CSSRegistry:
 
     @classmethod
     def register_block(cls, block):
-        """
-        Registers selectors of the block and its children recursively.
-        """
         cls.register_single_selectors(block)
-
         block_id = getattr(block, "attrs", {}).get("id")
         children = list(getattr(block, "children", []))
-
-        # ID > TAG CASCADE
         if block_id:
             for child in children:
                 child_tag = getattr(child, "tag", None)
                 if child_tag:
-                    selector = f"#{block_id} > {child_tag}"
-                    cls._cascades.add(selector)
-
-        # TAG > TAG and cascades
+                    cls._cascades.add(f"#{block_id} > {child_tag}")
         cls._register_cascades_by_tag(block)
-
-        # Recursion through children blocks
         for child in children:
-            if hasattr(child, "tag") and getattr(child, "tag") and hasattr(child, "children"):
+            if hasattr(child, "children"):
                 cls.register_block(child)
-
-        # ContentItems
         for ctn_item in getattr(block, "content_items", []):
             cls.register_single_selectors(ctn_item)
 
     @classmethod
-    def generate_css(cls):
+    def generate_css(cls) -> str:
         """
-        Returns all generated selectors as a CSS text string.
+        Returns a minified CSS string containing only selectors with active rules.
+        Removes internal newlines and empty blocks.
         """
-        lines = ["/* Selectors generated by PyFrontKit */\n"]
+        try:
+            from .style_manager import CSS_RULES_STYLE
+        except ImportError:
+            CSS_RULES_STYLE = []
 
-        # TAGS
-        for tag in sorted(cls._tags):
-            lines.append(f"{tag} {{\n \t/* styles here */\n}}\n")
+        # 1. Map selectors and CLEAN internal content
+        active_styles = {}
+        for rule_dict in CSS_RULES_STYLE:
+            for selector, data in rule_dict.items():
+                raw_content = data.get("css", "").strip()
+                if raw_content:
+                    # Minification: Remove extra newlines and spaces within the rules
+                    # This converts multi-line CSS into a clean single-line rule
+                    clean_lines = [line.strip() for line in raw_content.splitlines() if line.strip()]
+                    active_styles[selector] = " ".join(clean_lines)
 
-        # IDS
-        for id_name in sorted(cls._ids):
-            lines.append(f"#{id_name} {{\n \t/* styles here */\n}}\n")
+        lines = []
+        # 2. Build the final output
+        all_selectors = (
+            list(cls._tags) + 
+            [f"#{i}" for i in cls._ids] + 
+            [f".{c}" for c in cls._classes] + 
+            list(cls._cascades)
+        )
 
-        # CLASSES
-        for cls_name in sorted(cls._classes):
-            lines.append(f".{cls_name} {{\n \t/* styles here */\n}}\n")
-
-        # CASCADES
-        for selector in sorted(cls._cascades):
-            lines.append(f"{selector} {{\n \t/* styles here */\n}}\n")
+        for selector in sorted(set(all_selectors)):
+            if selector in active_styles:
+                # Format: selector { property: value; property: value; }
+                lines.append(f"{selector} {{ {active_styles[selector]} }}")
 
         return "\n".join(lines)
+
+    @classmethod
+    def clear_registry(cls):
+        """Wipes memory for the next request."""
+        cls._tags.clear()
+        cls._ids.clear()
+        cls._classes.clear()
+        cls._cascades.clear()

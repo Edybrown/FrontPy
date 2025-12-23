@@ -209,3 +209,66 @@ h1, h2, h3, h4, h5, h6, p, ul, ol, li {
         CSS_RULES_STYLE.append({selector: {"css": css_text}})
 
         return self
+    
+
+    def create_template(self, css=True, inline=True):
+        """
+        Generates the document in memory for production.
+        
+        Args:
+            css (bool): If False, no dynamic CSS is generated or included.
+            inline (bool): If True, CSS is embedded in a <style> tag within the <head>.
+                          If False, returns a tuple (html, css) for separate serving.
+        
+        Returns:
+            str | tuple: The full HTML string, or a (html, css) tuple.
+        """
+        # 1. Register structure from all blocks
+        for block in Block._registry:
+            CSSRegistry.register_block(block)
+
+        # 2. Generate and Clean CSS (only if requested)
+        dynamic_css = ""
+        if css:
+            dynamic_css = CSSRegistry.generate_css() # This method already filters empty/comments
+
+        # 3. Handle CSS Inlining logic
+        style_tag = ""
+        full_css_content = f"{self._css_base}\n{dynamic_css}"
+        
+        if css and inline:
+            # We wrap the content in the <style> tag manually as requested
+            style_tag = f"\n<style>\n{full_css_content}\n</style>"
+
+        # 4. Render Body and Scripts
+        body_content = self.render_body()
+        body_scripts = "\n".join(f"<script>\n{c}\n</script>" for c in self._body_scripts)
+
+        # 5. Assemble HTML
+        # Note: If inline is False, {style_tag} will be empty
+        html_output = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{self.title}</title>{style_tag}
+</head>
+<body>
+{body_content}
+{body_scripts}
+</body>
+</html>"""
+
+        # 6. CRITICAL: Global Cleanup for Production Statelessness
+        CSSRegistry.clear_registry()
+        Block._registry.clear()
+        try:
+            from .style_manager import CSS_RULES_STYLE
+            CSS_RULES_STYLE.clear()
+        except ImportError:
+            pass
+
+        # 7. Final Output logic
+        if css and not inline:
+            return html_output, full_css_content
+        
+        return html_output

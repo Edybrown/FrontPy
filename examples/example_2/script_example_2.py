@@ -30,5 +30,5 @@ content(div(ctn_strong="Unlock the Power of Linear\nOne Board, One URL").form(co
 )
 footer(ctn_p="""© 2025 PyFrontKit. All rights reserved.  
                    Proudly built with PyFrontKit.""").form("1532px","80px",color="#a5e12d",background="rgba(40, 40, 40, 0.35)").position("710px")
-doc.create_document()
-CreateFont("Ebrima")
+
+print(doc.create_template())

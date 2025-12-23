@@ -1,149 +1,81 @@
-# PyFrontKit  
-### A Python DSL for Programmatic HTML & CSS Generation
 
-[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](http://www.gnu.org/licenses/gpl-3.0)
+# PyFrontKit
 
-**PyFrontKit** is a Python library that lets you **generate clean, production-ready HTML and CSS using pure Python**, without replacing web standards and without hiding them.
+### A Python DSL for Effortless HTML & CSS Generation
 
-It is not a framework.  
-It is a **tool for structure, control, and clarity**.
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 
----
+**PyFrontKit** is a Python library that lets you **write clean, professional HTML and CSS using pure Python**, without replacing web standards and without hiding them.
 
-## 🌍 What PyFrontKit Is (and Is Not)
-
-### ✔ What it **is**
-- A **Pythonic DSL** to generate HTML and CSS
-- A tool to reduce boilerplate while keeping full control
-- A system that produces **real, editable HTML and CSS**
-- Designed for developers who already understand what they want to build
-- Suitable for **production use**
-
-### ✖ What it is **not**
-- It does **not replace HTML, CSS, or JavaScript**
-- It does **not hide the DOM**
-- It does **not generate layouts automatically**
-- It is **not a visual builder**
-
-PyFrontKit helps you **write less**, not **think less**.
+It is **not a framework**—it’s a **tool for structure, control, and clarity**.
 
 ---
 
-## 🧠 Philosophy
+## 🌟 Why PyFrontKit Exists
 
-PyFrontKit follows a simple principle:
+Developers often spend hours writing repetitive HTML and CSS. PyFrontKit allows you to:
+
+* **Reduce boilerplate** while keeping full control
+* Generate **real, editable HTML and CSS**
+* Use Python logic (`if/else`, `for`) to shape your page dynamically
+* Build production-ready pages **to disk** or **directly in memory**, with optional inline CSS
 
 > **Structure first. Automation second. Control always.**
 
-You describe your document structure using Python.
-PyFrontKit generates clean output files:
+---
 
-```
+## 💡 What PyFrontKit Is (and Isn’t)
 
-index.html
-style.css
+### ✔ It **is**:
 
-````
+* A Pythonic DSL for HTML and CSS
+* A productivity tool that simplifies repetitive tasks
+* A system that produces professional, **editable** code
+* Suitable for **static sites, landing pages, and Python-driven frontends**
 
-No runtime. No browser dependency. No abstraction leaks.
+### ✖ It **is not**:
+
+* A visual builder
+* A framework that hides HTML/CSS
+* A layout generator
+* A runtime-dependent system
+
+PyFrontKit helps you **write less without thinking less**.
 
 ---
 
-## 🧩 How Structure Works
+## 🧱 Core Concepts
 
-### Blocks, IDs, and Content
+### Blocks and Content
 
-- **Blocks** represent HTML elements (`div`, `section`, `header`, etc.)
-- **`ctn_` parameters** define textual content inside a block
-- **`id` is optional** and should be used **only when a block needs to receive children later**
-
-### Important rule
-
-> **`ctn_` content is NOT a child block.  
-> Only blocks passed as arguments become children.**
-
-This means:
+* **Blocks** = HTML elements (`div`, `section`, `header`, etc.)
+* **`ctn_` parameters** = textual content inside a block
+* **IDs** are optional; required only for blocks receiving children later
 
 ```python
-Footer(ctn_p="© 2025 PyFrontKit")
-````
-
-✔ Valid
-✔ No `id` required
-✔ No children expected
-
-But if you want to add content later:
-
-```python
-Footer(id="page_footer")
-page_footer(
-    Div(ctn_p="© 2025 PyFrontKit")
-)
+Footer(ctn_p="© 2025 PyFrontKit")  # simple block
+Footer(id="page_footer")           # can receive children later
 ```
 
-✔ `id` is required
-✔ The block can now receive children
+### Text Handling (`ContentItems`)
+
+* Automatically converts line breaks (`\n`) into `<br />`
+* Supports multiple tags (`p`, `span`, `h1`–`h6`, `strong`, `em`, `code`, `mark`)
+* Full triple-quoted strings supported
 
 ---
 
-### ⚠️ ID Naming Recommendation
+## 🎨 Styling
 
-Do **not** use tag names as IDs.
-
-❌ Bad:
-
-```python
-Footer(id="footer")
-```
-
-✅ Good:
-
-```python
-Footer(id="page_footer")
-```
-
-IDs represent **meaning**, not structure.
-
----
-
-## ✍️ Content System (`ctn_`)
-
-Text is written naturally using Python strings:
-
-```python
-Div(
-    ctn_p="""This is line one
-This is line two"""
-)
-```
-
-* Line breaks (`\n`) automatically generate `<br />`
-* Triple-quoted strings are fully supported
-* Supported tags include:
-
-  * `p`, `span`
-  * `h1`–`h6`
-  * `strong`, `em`, `code`, `mark`, etc.
-
-This system is handled internally by **ContentItems**.
-
----
-
-## 🎨 Styling Overview
-
-Styling is **never forced**.
-
-You can mix and choose:
-
-### 1️⃣ Inline styles (fast prototyping)
+### 1️⃣ Inline Styles (Fast Prototyping)
 
 ```python
 Div(ctn_p="Hello", style="color:red; padding:10px;")
 ```
 
-### 2️⃣ External CSS (recommended)
+### 2️⃣ External CSS (Recommended)
 
-PyFrontKit automatically generates selectors in `style.css`:
+PyFrontKit generates selectors in `style.css` that are **editable**:
 
 ```css
 #page_footer {}
@@ -151,58 +83,44 @@ section {}
 div {}
 ```
 
-You edit them freely.
-
 ---
 
 ## 🎨 Color System (Optional)
 
-PyFrontKit includes an optional **Color System**:
+* `CreateColor` → predefined palettes and templates
+* `CreateWithColor` → define custom colors while using templates
 
-* `CreateColor`
-* `CreateWithColor`
-
-These classes:
-
-* Apply predefined color palettes
-* Distribute colors using named templates
-* Work **after** `create_document()`
-
-Available templates include:
-
-```
-simple, classic, soft, darkness,
-mono, mono_accent,
-total, total_v2,
-classic_reverse, dark_reverse, asimetric, enfasis_main
-```
-
-### Two approaches
-
-#### ✔ `CreateColor`
-
-Uses predefined palettes and families.
-
-#### ✔ `CreateWithColor`
-
-Lets you define your own colors manually and still use templates.
-
-You can always refine or override colors using:
-
-* CSS
-* `Block.form()` methods
+Available templates:
+`simple, classic, soft, darkness, mono, mono_accent, total, total_v2, classic_reverse, dark_reverse, asimetric, enfasis_main`
 
 ---
 
 ## ✒️ Typography System (Optional)
 
-Typography helpers allow you to:
-
-* Load external fonts (Google Fonts or custom)
+* Load custom or Google fonts
 * Separate body, header, and footer typography
-* Apply styles at CSS level
+* Apply styles via CSS, never hardcoded
 
-Typography is never hardcoded.
+---
+
+## 💻 Disk vs Memory
+
+### Disk Mode
+
+Generates files:
+
+```
+index.html
+style.css
+```
+
+### Memory Mode
+
+Returns a fully-rendered string, ready for frameworks like **FastAPI** or **Flask**, optionally with **inline CSS** for single-response delivery.
+
+```python
+doc.create_template()  # returns HTML+CSS string
+```
 
 ---
 
@@ -222,39 +140,32 @@ content(
 
 Footer(ctn_p="© 2025 PyFrontKit")
 
-doc.create_document()
-```
-
-Output:
-
-```
-index.html
-style.css
+doc.create_document()  # writes index.html + style.css
 ```
 
 ---
 
-## 🧱 Main Systems
+## 🖼️ Examples
 
-Documentation is split by responsibility:
+PyFrontKit ships with **two professional examples**:
 
-* **HtmlDoc** – document creation and file output
-* **Block** – structure and layout
-* **ContentItems** – textual content (`ctn_`)
-* **VoidElement** – self-closing tags (`img`, `hr`, `input`, etc.)
-* **ColorSystem** – palettes and templates
-* **TypographySystem** – fonts and text styling
+| File           | Description                                                 |
+| -------------- | ----------------------------------------------------------- |
+| `example_1.py` | Landing page with hero sections and grids                   |
+| `example_2.py` | Multi-section page demonstrating color & typography systems |
 
-📘 See `/docs` for full documentation.
+> Check the `examples/` folder to see PyFrontKit in action.
 
 ---
 
-## 🧪 Production Ready
+## 🚀 Use Cases
 
-* Tested with `pytest`
-* Deterministic output
-* No runtime execution
-* Ideal for automation and CI pipelines
+* Static websites
+* Documentation generators
+* Landing pages
+* UI prototyping
+* Teaching HTML & CSS structure
+* Python-driven frontend workflows
 
 ---
 
@@ -272,31 +183,18 @@ pip install git+https://github.com/Edybrown/pyfrontkit.git
 
 ---
 
-## 🚀 Use Cases
+## 🧪 Production Ready
 
-* Static websites
-* Documentation generators
-* Landing pages
-* UI prototyping
-* Teaching HTML & CSS structure
-* Python-driven frontend workflows
-
----
-
-## 📄 License
-
-GNU GPL v3
-Free to use, modify, and redistribute under the same license.
+* Deterministic output
+* Tested with `pytest`
+* No runtime dependencies
+* Ideal for automation & CI pipelines
 
 ---
 
 ## 👤 Author
 
-Created by **Eduardo Antonio Ferrera Rodríguez**
+**Eduardo Antonio Ferrera Rodríguez**
+Focus: Python DSL, frontend structure, automation without abstraction loss, professional output
 
-A project focused on:
-
-* Python DSL design
-* Frontend structure
-* Automation without abstraction loss
-* Professional, maintainable output
+Licensed under **MIT License**

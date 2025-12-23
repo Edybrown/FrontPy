@@ -1,19 +1,29 @@
 
+---
+
 # `HtmlDoc` — PyFrontKit Documentation
 
 ## Overview
 
-The `HtmlDoc` class is the **main entry point** for PyFrontKit. It allows you to create **complete HTML pages with CSS** programmatically using Python.
+The `HtmlDoc` class is the **main entry point** for PyFrontKit.
+It allows you to **define, assemble, and render complete HTML documents with CSS** using pure Python.
+
+`HtmlDoc` supports **two rendering modes**:
+
+1. **File-based rendering** — generate physical HTML and CSS files on disk.
+2. **In-memory rendering** — generate HTML (and CSS) as Python strings.
 
 It handles:
 
-* Generating the basic HTML structure (`<html>`, `<head>`, `<body>`).
-* Applying global layout styles to the `body`.
-* Adding JavaScript to the document.
-* Writing the final files (`index.html` and `style.css`) to disk.
+* Generating the base HTML structure (`<html>`, `<head>`, `<body>`).
+* Managing a document-local internal DOM during creation.
+* Applying global layout styles to the `<body>`.
+* Collecting and rendering JavaScript snippets.
+* Rendering output **to disk or directly in memory**, depending on the workflow.
 
-> ⚠️ Important: Always call `create_document()` **last**, after creating all blocks and adding content.
-> Classes for styling (like `CreateFont`, `CreateColor`, etc.) are applied **after** `create_document()` because they work on the generated document, not in memory.
+> ⚠️ Important
+> `HtmlDoc` does **not** expose or persist a global DOM.
+> Each render builds a **local, temporary document model** that is discarded after output is generated.
 
 ---
 
@@ -22,123 +32,179 @@ It handles:
 ```python
 from pyfrontkit import HtmlDoc
 
-# Create a new HTML document
 doc = HtmlDoc(
     title="My Page",
-    path="./output",          # Directory where files will be created
+    path="./output",          # Directory where files will be created (file-based rendering)
     links=["reset.css"],      # Optional external stylesheets
     inline_style=None,        # Optional inline CSS for the <head>
     head_scripts=[]           # Optional scripts in <head>
 )
 ```
 
-**Parameters:**
+### Parameters
 
-| Parameter      | Type | Description                                        |
-| -------------- | ---- | -------------------------------------------------- |
-| `title`        | str  | The page title (`<title>`).                        |
-| `path`         | str  | Directory to save the HTML and CSS files.          |
-| `links`        | list | Optional list of CSS files to include in `<head>`. |
-| `inline_style` | str  | Optional inline CSS added inside `<head>`.         |
-| `head_scripts` | list | Optional list of JS files added inside `<head>`.   |
+| Parameter      | Type | Description                                           |
+| -------------- | ---- | ----------------------------------------------------- |
+| `title`        | str  | The page title (`<title>`).                           |
+| `path`         | str  | Directory used by `create_document()` to write files. |
+| `links`        | list | Optional list of CSS files included in `<head>`.      |
+| `inline_style` | str  | Optional inline CSS added to `<head>`.                |
+| `head_scripts` | list | Optional external scripts added to `<head>`.          |
 
 ---
 
 ## Key Attributes
 
-| Attribute       | Description                                        |
-| --------------- | -------------------------------------------------- |
-| `html_file`     | Full path to the generated HTML file.              |
-| `css_file`      | Full path to the generated CSS file.               |
-| `_body_scripts` | List of JavaScript snippets added with `script()`. |
-| `links`         | Optional list of external CSS links.               |
-| `inline_style`  | Optional inline CSS.                               |
+| Attribute       | Description                                                  |
+| --------------- | ------------------------------------------------------------ |
+| `html_file`     | Full path to the generated HTML file (file-based rendering). |
+| `css_file`      | Full path to the generated CSS file (file-based rendering).  |
+| `_body_scripts` | List of JavaScript snippets added via `script()`.            |
+| `links`         | External stylesheet links included in `<head>`.              |
+| `inline_style`  | Optional inline CSS for `<head>`.                            |
 
 ---
 
-## Main Methods
+## Rendering Modes
 
-### `create_document()`
+`HtmlDoc` supports two distinct rendering workflows.
 
-Generates the HTML and CSS files in the specified directory.
+### 1️⃣ File-Based Rendering (`create_document()`)
+
+This mode generates physical files on disk and is intended for:
+
+* Static site generation
+* Build-time workflows
+* Exporting HTML/CSS for manual editing
+
+#### `create_document()`
 
 ```python
 doc.create_document()
-# Generates index.html and style.css
 ```
 
-* Registers all blocks (`Block`) and their styles.
-* Adds any scripts defined with `script()`.
-* Applies global `body` styles defined with `align()`.
+This method:
 
-> **Tip:** This should always be the last method you call. Any styling classes (`CreateFont`, `CreateColor`, etc.) should be applied after this.
+* Registers all created blocks and their styles.
+* Generates `index.html` and `style.css`.
+* Applies global body layout styles (`align()`).
+* Writes files to the directory defined by `path`.
+
+> **Important**
+> `create_document()` should be the **final step** of the document creation process.
+> Styling systems such as `CreateFont` or `CreateColor` are applied **after** this call because they operate on generated files.
 
 ---
 
+### 2️⃣ In-Memory Rendering (`create_template()`)
+
+This mode renders the document **entirely in memory**, without creating files on disk.
+
+It is designed for:
+
+* Template reuse
+* Dynamic serving
+* Testing
+* Integration with servers or external frameworks
+
+#### `create_template(css=True, inline=True)`
+
+```python
+html = doc.create_template()
+```
+
+##### Parameters
+
+| Parameter | Type | Description                                                                                      |
+| --------- | ---- | ------------------------------------------------------------------------------------------------ |
+| `css`     | bool | Enables or disables CSS generation.                                                              |
+| `inline`  | bool | If `True`, CSS is embedded in a `<style>` tag. If `False`, HTML and CSS are returned separately. |
+
+##### Return Values
+
+```python
+# Inline CSS (single string)
+html = doc.create_template()
+
+# Separate HTML and CSS
+html, css = doc.create_template(inline=False)
+```
+
+---
+
+## Stateless Rendering Model
+
+After `create_template()` is executed, **all internal registries are cleared**.
+
+This guarantees:
+
+* No shared state between renders
+* Safe reuse across multiple calls
+* Independent output for each execution
+* Compatibility with concurrent or iterative workflows
+
+Each call to `create_template()` produces a **fully independent document**.
+
+---
+
+## Body Layout
+
 ### `align(orientation, gap=None, padding=None, grid_column=None)`
 
-Applies layout styles to the `<body>` element.
+Applies layout styles directly to the `<body>` element.
 
 ```python
 doc.align("column", gap="20px", padding="10px")
 ```
 
-**Parameters:**
-
-| Parameter     | Type | Description                                           |
-| ------------- | ---- | ----------------------------------------------------- |
-| `orientation` | str  | Layout type: `"column"`, `"row"`, or `"grid"`.        |
-| `gap`         | str  | Spacing between child elements.                       |
-| `padding`     | str  | Padding inside the `<body>`.                          |
-| `grid_column` | int  | Number of columns (required if `orientation="grid"`). |
-
-> **Example:** Use `align("row", gap="30px")` to create a horizontal layout for all top-level elements.
+| Parameter     | Type | Description                       |
+| ------------- | ---- | --------------------------------- |
+| `orientation` | str  | `"column"`, `"row"`, or `"grid"`. |
+| `gap`         | str  | Space between child elements.     |
+| `padding`     | str  | Inner padding of the `<body>`.    |
+| `grid_column` | int  | Required when using grid layout.  |
 
 ---
 
+## JavaScript Injection
+
 ### `script(js_code)`
 
-Adds a JavaScript snippet at the end of the `<body>`.
+Adds raw JavaScript at the end of the `<body>`.
 
 ```python
 doc.script("console.log('Hello from PyFrontKit');")
 ```
 
-* Multiple scripts can be added.
-* They execute in the order added.
-
-> Example use: adding simple UI interactions, logging, or client-side behavior.
+Scripts are rendered **in order of insertion**.
 
 ---
+
+## Internal Rendering
 
 ### `render_body()`
 
-Generates HTML for all registered blocks with no parent.
+Renders all top-level blocks (blocks without a parent).
 
-* Usually **not called directly**.
-* Automatically used inside `create_document()` to render the page body.
+* Automatically used by both rendering modes.
+* Typically not called directly.
 
 ---
 
-## Full Example
+## Full Example (File-Based)
 
 ```python
 from pyfrontkit import HtmlDoc, div, a
 
-# 1️⃣ Create document
 doc = HtmlDoc(title="My Page")
 
-# 2️⃣ Apply body layout
 doc.align("column", gap="30px", padding="20px")
 
-# 3️⃣ Create top-level blocks
 div(id="header", ctn_p="Welcome").align("row", gap="10px")
 a(ctn_p="Login").hover("white", "#000")
 
-# 4️⃣ Add JavaScript
 doc.script("console.log('Hello from PyFrontKit');")
 
-# 5️⃣ Generate final files
 doc.create_document()
 ```
 
@@ -151,10 +217,12 @@ doc.create_document()
 
 ---
 
-## Notes for Beginners
+## Notes
 
-* `HtmlDoc` is **the first class you always instantiate**.
-* Use `Block` or derived elements to add content.
-* `create_document()` is the **final step**; nothing else should modify the document before this.
-* Styling classes (like `CreateFont`, `CreateColor`, etc.) are applied **after** `create_document()`.
+* `HtmlDoc` manages document creation and rendering only.
+* It does not enforce application logic or routing.
+* Templates are typically defined as **Python functions** that return `create_template()` output.
+* For template composition patterns, see `docs/templates.md`.
+
+---
 

@@ -1,31 +1,36 @@
 [build-system]
-requires = ["setuptools>=61.0.0", "wheel"]
+requires = ["setuptools>=61.0", "wheel", "build"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "pyfrontkit"
-version = "1.1.6"
+version = "1.1.9"
 description = "A Python tool to generate HTML and CSS with programmable syntax."
 readme = "README.md"
-
+requires-python = ">=3.8"
 authors = [
-    { name = "Eduardo Antonio Ferrera Rodríguez", email = "enzoferrera.23@gmail.com" },
+    { name = "Eduardo Antonio Ferrera Rodríguez", email = "enzoferrera.23@gmail.com" }
 ]
 
+# Usamos la tabla antigua para forzar Metadata 2.1
 license = { text = "MIT" }
 
 keywords = ["html", "css", "python", "frontend", "mlops", "data app"]
 
 classifiers = [
     "Programming Language :: Python :: 3",
-    "Operating System :: OS Independent",
     "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent"
 ]
 
 [project.urls]
 Homepage = "https://github.com/Edybrown/pyfrontkit"
 Source = "https://github.com/Edybrown/pyfrontkit"
 Issues = "https://github.com/Edybrown/pyfrontkit/issues"
+
+[tool.setuptools]
+# Esto es lo que evita que se creen los campos problemáticos
+license-files = []
 
 [tool.setuptools.packages.find]
 where = ["."]
