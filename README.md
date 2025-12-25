@@ -1,15 +1,14 @@
 
 # PyFrontKit
 
-### A Python DSL for Effortless HTML & CSS Generation
+### A Python DSL for Building Web Views as Executable Code
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 
-**PyFrontKit** is a Python library that lets you **write clean, professional HTML and CSS using pure Python**, without replacing web standards and without hiding them.
+**PyFrontKit** is a Python library that lets you **build web views using pure Python**, producing clean, professional HTML and CSS without replacing or hiding web standards.
 
-It is **not a framework**—it’s a **tool for structure, control, and clarity**.
+It is **not a framework** — it’s a **backend-friendly engine for structure, control, and clarity**.
 
----
 
 ## 🌟 Why PyFrontKit Exists
 
