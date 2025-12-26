@@ -11,6 +11,7 @@ from typing import Any
 VALID_HTML_ATTRS = {
     "id", "class", "class_", "style", "title", "alt", "src", "href", "target",
     "type", "name", "value", "disabled", "checked", "readonly", "placeholder",
+    "action","method","enctype", "autocomplete", "novalidate"
 }
 
 # Optional tag-specific whitelist
